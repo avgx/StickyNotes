@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="hello">Hello World, StickyNotesActivity!</string>
+    <string name="app_name">Sticky Notes</string>
+    <string name="write_to_tag">Write to Tag</string>
+    <string name="default_note_text">Edit me!</string>
+    <string name="btn_start_serve_str">启动服务器</string>
+    <string name="btn_stop_serve_str">停止服务器</string>
+    <string name="tv_log">show log</string>
+</resources>
