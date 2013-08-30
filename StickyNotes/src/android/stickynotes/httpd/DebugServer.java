@@ -1,6 +1,12 @@
 package android.stickynotes.httpd;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.util.Map;
+
+import android.stickynotes.httpd.NanoHTTPD.Response.Status;
 
 public class DebugServer extends NanoHTTPD {
     public DebugServer() {
@@ -25,6 +31,22 @@ public class DebugServer extends NanoHTTPD {
         sb.append("<h3>Files</h3><p><blockquote>").append(String.valueOf(files)).append("</blockquote></p>");
         sb.append("</body>");
         sb.append("</html>");
-        return new Response(sb.toString());
+        
+        if(uri != null && uri.indexOf(".apk") != -1){
+        	File myFile = new File(System.getProperty("java.io.tmpdir") + uri );
+        	InputStream is = null;
+			try {
+				is = new FileInputStream(myFile);
+			} catch (FileNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				return new Response(Status.NOT_FOUND, MIME_HTML, is);
+			}
+        	return new Response(Status.PARTIAL_CONTENT, MIME_DEFAULT_BINARY, is);
+        }else{
+        	return new Response(sb.toString());
+        }
+        
+        
     }
 }

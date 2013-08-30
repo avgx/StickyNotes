@@ -24,7 +24,7 @@
         android:gravity="top"
         android:text="@string/default_note_text" >
     </EditText>
-    
+
     <LinearLayout
         android:id="@+id/linearLayout2"
         android:layout_width="match_parent"
@@ -35,7 +35,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginLeft="15dp"
-            android:layout_marginTop="20dp"
+            android:layout_marginTop="5dp"
             android:text="@string/btn_start_serve_str" />
 
         <Button
@@ -43,19 +43,34 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginLeft="102dp"
-            android:layout_marginTop="20dp"
+            android:layout_marginTop="5dp"
             android:text="@string/btn_stop_serve_str" />
-        
     </LinearLayout>
 
-    <TextView
-        android:id="@+id/textView1"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignLeft="@+id/button1"
-        android:layout_below="@+id/textView2"
-        android:layout_marginTop="24dp"
-        android:layout_weight="0.04"
-        android:text="@string/tv_log" />
+    
+
+    <ScrollView
+        android:id="@+id/scrollView1"
+        android:layout_width="fill_parent"
+        android:layout_height="100dp" >
+
+        <TextView
+            android:id="@+id/tv_show_log"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginBottom="2dp"
+            android:layout_marginTop="4dp"
+            android:text="@string/tv_log" />
+
+    </ScrollView>
+
+    <ImageView
+        android:id="@+id/imageview"
+        android:layout_width="fill_parent"
+        android:layout_height="272dp"
+        android:layout_gravity="center"
+        android:layout_marginTop="2dp"
+        android:scaleType="fitCenter"
+        android:src="@drawable/icon" />
 
 </LinearLayout>

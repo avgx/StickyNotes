@@ -19,10 +19,14 @@ package android.stickynotes;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.PendingIntent;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.IntentFilter.MalformedMimeTypeException;
+import android.graphics.Bitmap;
+import android.net.wifi.WifiInfo;
+import android.net.wifi.WifiManager;
 import android.nfc.NdefMessage;
 import android.nfc.NdefRecord;
 import android.nfc.NfcAdapter;
@@ -31,6 +35,7 @@ import android.nfc.tech.Ndef;
 import android.nfc.tech.NdefFormatable;
 import android.os.Bundle;
 import android.os.Parcelable;
+import android.stickynotes.httpd.QrCodeUtil;
 import android.stickynotes.httpd.ServerRunner;
 import android.stickynotes.httpd.TempFilesServer;
 import android.text.Editable;
@@ -39,8 +44,15 @@ import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 
 
@@ -50,6 +62,10 @@ public class StickyNotesActivity extends Activity {
     private boolean mWriteMode = false;
     NfcAdapter mNfcAdapter;
     EditText mNote;
+    
+    TextView showLogTextView;
+    
+    ImageView myImageView;
 
     PendingIntent mNfcPendingIntent;
     IntentFilter[] mWriteTagFilters;
@@ -66,6 +82,10 @@ public class StickyNotesActivity extends Activity {
         
         findViewById(R.id.btn_start_serve).setOnClickListener(startServeBtn);
         findViewById(R.id.btn_stop_serve).setOnClickListener(stopServeBtn);
+        
+        showLogTextView = (TextView)findViewById(R.id.tv_show_log);
+        
+        myImageView = (ImageView)findViewById(R.id.imageview);  
         
         mNote = ((EditText) findViewById(R.id.note));
         mNote.addTextChangedListener(mTextWatcher);
@@ -147,9 +167,40 @@ public class StickyNotesActivity extends Activity {
 		@Override
 		public void onClick(View v) {
 			// TODO Auto-generated method stub
-//			Intent intent = new Intent(MainActivity.this, WebMapActivity.class);
-//			startActivity(intent);
-			TempFilesServer.startInstance();
+
+			// 获取当前程序路径
+			String currentPath = getApplicationContext().getFilesDir()
+					.getAbsolutePath();
+
+			// 获取该程序的安装包路径
+			String resourcePath = getApplicationContext()
+					.getPackageResourcePath();
+			String cachePath = System.getProperty("java.io.tmpdir");
+
+			File myFile = new File(resourcePath);
+			File targetFile = new File(cachePath, myFile.getName());
+			try {
+				targetFile.deleteOnExit();
+				copyFile(myFile, targetFile);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+
+			TempFilesServer.startInstance(showLogTextView);
+			showLogTextView.setText(showLogTextView.getText() + "\n"
+					+ "You can use the following adress to visite : " + "\n"
+					+ "http://" + getIp() + ":8080");
+
+			showLogTextView.setText(showLogTextView.getText() + "\n"
+					+ "currentPath:" + currentPath + "\n" + "resourcePath:"
+					+ resourcePath + "\n" + "cachePath:" + cachePath);
+			
+			QrCodeUtil qcu = new QrCodeUtil();
+			String downloadUrl = "http://" + getIp() + ":8080/" + targetFile.getName();
+			Bitmap bitmap = qcu.createBitmap(downloadUrl);
+			myImageView.setImageBitmap(bitmap);
+
 		}
 		
 	};
@@ -160,7 +211,7 @@ public class StickyNotesActivity extends Activity {
 			// TODO Auto-generated method stub
 //			Intent intent = new Intent(MainActivity.this, WebMapActivity.class);
 //			startActivity(intent);
-			TempFilesServer.stopInstance();
+			TempFilesServer.stopInstance(showLogTextView);
 		}
 		
 	};
@@ -246,8 +297,13 @@ public class StickyNotesActivity extends Activity {
     }
 
     private void enableNdefExchangeMode() {
-        mNfcAdapter.enableForegroundNdefPush(StickyNotesActivity.this, getNoteAsNdef());
-        mNfcAdapter.enableForegroundDispatch(this, mNfcPendingIntent, mNdefExchangeFilters, null);
+    	if(mNfcAdapter != null){
+    		 mNfcAdapter.enableForegroundNdefPush(StickyNotesActivity.this, getNoteAsNdef());
+    	     mNfcAdapter.enableForegroundDispatch(this, mNfcPendingIntent, mNdefExchangeFilters, null);
+    	}else {
+    		toast("The NFC is not support on this device!");
+		}
+       
     }
 
     private void disableNdefExchangeMode() {
@@ -313,7 +369,53 @@ public class StickyNotesActivity extends Activity {
 
         return false;
     }
+    
+    private String getIp(){  
+        WifiManager wm=(WifiManager)getSystemService(Context.WIFI_SERVICE);  
+        //检查Wifi状态    
+        if(!wm.isWifiEnabled())  
+            wm.setWifiEnabled(true);  
+        WifiInfo wi=wm.getConnectionInfo();  
+        //获取32位整型IP地址    
+        int ipAdd=wi.getIpAddress();  
+        //把整型地址转换成“*.*.*.*”地址    
+        String ip=intToIp(ipAdd);  
+        return ip;  
+    }  
+    private String intToIp(int i) {  
+        return (i & 0xFF ) + "." +  
+        ((i >> 8 ) & 0xFF) + "." +  
+        ((i >> 16 ) & 0xFF) + "." +  
+        ( i >> 24 & 0xFF) ;  
+    } 
+    
+    // 复制文件
+    public static void copyFile(File sourceFile, File targetFile) throws IOException {
+        BufferedInputStream inBuff = null;
+        BufferedOutputStream outBuff = null;
+        try {
+            // 新建文件输入流并对它进行缓冲
+            inBuff = new BufferedInputStream(new FileInputStream(sourceFile));
 
+            // 新建文件输出流并对它进行缓冲
+            outBuff = new BufferedOutputStream(new FileOutputStream(targetFile));
+
+            // 缓冲数组
+            byte[] b = new byte[1024 * 5];
+            int len;
+            while ((len = inBuff.read(b)) != -1) {
+                outBuff.write(b, 0, len);
+            }
+            // 刷新此缓冲的输出流
+            outBuff.flush();
+        } finally {
+            // 关闭流
+            if (inBuff != null)
+                inBuff.close();
+            if (outBuff != null)
+                outBuff.close();
+        }
+    }
     private void toast(String text) {
         Toast.makeText(this, text, Toast.LENGTH_SHORT).show();
     }
