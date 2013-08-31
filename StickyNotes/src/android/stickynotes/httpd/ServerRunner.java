@@ -64,7 +64,7 @@ public class ServerRunner {
     
     public static void stopInstance(NanoHTTPD server, TextView tv){
     	server.stop();
-    	String logString = "Server stopped.\n";
+    	String logString = "Server is stopped.\n";
         System.out.println(logString);
         if(tv != null){
         	tv.setText(tv.getText() + "\n" + logString);
