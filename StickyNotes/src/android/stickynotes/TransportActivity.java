@@ -13,8 +13,12 @@ import android.os.Bundle;
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.stickynotes.httpd.NanoHTTPD;
 import android.stickynotes.httpd.QrCodeUtil;
+import android.stickynotes.httpd.ServerRunner;
+import android.stickynotes.httpd.SimpleWebServer;
 import android.stickynotes.httpd.TempFilesServer;
+import android.util.Log;
 import android.view.Menu;
 import android.view.View;
 import android.widget.ImageView;
@@ -22,27 +26,77 @@ import android.widget.TextView;
 
 public class TransportActivity extends Activity {
 
-TextView showLogTextView;
+    TextView showLogTextView;
     
     ImageView myImageView;
+    
+    NanoHTTPD server = null;
     
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_transport);
 		
-		findViewById(R.id.btn_start_serve).setOnClickListener(startServeBtn);
-        findViewById(R.id.btn_stop_serve).setOnClickListener(stopServeBtn);
+		//findViewById(R.id.btn_start_serve).setOnClickListener(startServeBtn);
+        //findViewById(R.id.btn_stop_serve).setOnClickListener(stopServeBtn);
         showLogTextView = (TextView)findViewById(R.id.tv_show_log);
         myImageView = (ImageView)findViewById(R.id.imageview);  
-        
+        startServe();
 	}
 
+	
 	@Override
-	public boolean onCreateOptionsMenu(Menu menu) {
-		// Inflate the menu; this adds items to the action bar if it is present.
-		getMenuInflater().inflate(R.menu.transport, menu);
-		return true;
+	protected void onStop() {
+		//TempFilesServer.stopInstance(showLogTextView);
+		if (server != null) {
+			ServerRunner.stopInstance(server, showLogTextView);
+			Log.d("", "the server is stoped !");
+		}else {
+			Log.d("", "The server is null, maybe already be stoped!");
+		}
+		
+		super.onStop();
+	}
+	
+	private void startServe(){
+		// 获取当前程序路径
+		String currentPath = getApplicationContext().getFilesDir()
+				.getAbsolutePath();
+
+		// 获取该程序的安装包路径
+		String resourcePath = getApplicationContext()
+				.getPackageResourcePath();
+		String cachePath = System.getProperty("java.io.tmpdir");
+		
+		File myFile = new File(resourcePath);
+		File targetFile = new File(currentPath, myFile.getName());
+		try {
+			targetFile.deleteOnExit();
+			copyFile(myFile, targetFile);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		//TempFilesServer.startInstance(showLogTextView);
+		String host = getIp();
+		int port = 8080;
+		File wwwroot = new File(currentPath);
+		server = new SimpleWebServer(host, port, wwwroot, false);
+		
+		ServerRunner.startInstance(server, showLogTextView);
+		showLogTextView.setText(showLogTextView.getText() + "\n"
+				+ "You can use the following adress to visite : " + "\n"
+				+ "http://" + getIp() + ":8080");
+
+		showLogTextView.setText(showLogTextView.getText() + "\n"
+				+ "currentPath:" + currentPath + "\n" + "resourcePath:"
+				+ resourcePath + "\n" + "cachePath:" + cachePath);
+		
+		QrCodeUtil qcu = new QrCodeUtil();
+		String downloadUrl = "http://" + getIp() + ":8080/" + targetFile.getName();
+		Bitmap bitmap = qcu.createBitmap(downloadUrl);
+		myImageView.setImageBitmap(bitmap);
 	}
 	
 	 private View.OnClickListener startServeBtn = new View.OnClickListener() {
@@ -51,42 +105,14 @@ TextView showLogTextView;
 			public void onClick(View v) {
 				// TODO Auto-generated method stub
 
-				// 获取当前程序路径
-				String currentPath = getApplicationContext().getFilesDir()
-						.getAbsolutePath();
-
-				// 获取该程序的安装包路径
-				String resourcePath = getApplicationContext()
-						.getPackageResourcePath();
-				String cachePath = System.getProperty("java.io.tmpdir");
-
-				File myFile = new File(resourcePath);
-				File targetFile = new File(cachePath, myFile.getName());
-				try {
-					targetFile.deleteOnExit();
-					copyFile(myFile, targetFile);
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-
-				TempFilesServer.startInstance(showLogTextView);
-				showLogTextView.setText(showLogTextView.getText() + "\n"
-						+ "You can use the following adress to visite : " + "\n"
-						+ "http://" + getIp() + ":8080");
-
-				showLogTextView.setText(showLogTextView.getText() + "\n"
-						+ "currentPath:" + currentPath + "\n" + "resourcePath:"
-						+ resourcePath + "\n" + "cachePath:" + cachePath);
-				
-				QrCodeUtil qcu = new QrCodeUtil();
-				String downloadUrl = "http://" + getIp() + ":8080/" + targetFile.getName();
-				Bitmap bitmap = qcu.createBitmap(downloadUrl);
-				myImageView.setImageBitmap(bitmap);
+				startServe();
 
 			}
 			
 		};
+		
+		
+		
 		private View.OnClickListener stopServeBtn = new View.OnClickListener() {
 			
 			@Override

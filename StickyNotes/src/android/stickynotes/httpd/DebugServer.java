@@ -6,6 +6,7 @@ import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.Map;
 
+import android.stickynotes.StickyNotesActivity;
 import android.stickynotes.httpd.NanoHTTPD.Response.Status;
 
 public class DebugServer extends NanoHTTPD {
@@ -33,7 +34,8 @@ public class DebugServer extends NanoHTTPD {
         sb.append("</html>");
         
         if(uri != null && uri.indexOf(".apk") != -1){
-        	File myFile = new File(System.getProperty("java.io.tmpdir") + uri );
+            String tmpdir = System.getProperty("java.io.tmpdir");
+        	File myFile = new File( tmpdir + uri );
         	InputStream is = null;
 			try {
 				is = new FileInputStream(myFile);

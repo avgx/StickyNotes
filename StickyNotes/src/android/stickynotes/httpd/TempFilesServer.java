@@ -1,11 +1,13 @@
 package android.stickynotes.httpd;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
 import android.content.Context;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
+import android.stickynotes.StickyNotesActivity;
 import android.widget.TextView;
 
 /**
@@ -20,15 +22,25 @@ public class TempFilesServer extends DebugServer {
     }
     
     public static void executeInstance(){
-    	server = new TempFilesServer();
-        server.setTempFileManagerFactory(new ExampleManagerFactory());
-        ServerRunner.executeInstance(server);
+    	if(server == null){
+    		server = new TempFilesServer();
+            server.setTempFileManagerFactory(new ExampleManagerFactory());
+            ServerRunner.executeInstance(server);
+    	}
+    	
     }
     
     public static void startInstance(TextView tv){
-    	server = new TempFilesServer();
-    	server.setTempFileManagerFactory(new ExampleManagerFactory());
-    	ServerRunner.startInstance(server, tv);
+    	if(server == null){
+    		server = new TempFilesServer();
+        	server.setTempFileManagerFactory(new ExampleManagerFactory());
+        	ServerRunner.startInstance(server, tv);
+    	}
+    	
+    }
+    
+    public static void startInstanceWithPath(String rootPath){
+    	
     }
     
     public static void stopInstance(TextView tv){

@@ -148,7 +148,10 @@ public class StickyNotesActivity extends Activity implements SensorEventListener
     	
         super.onPause();
         mResumed = false;
-        mNfcAdapter.disableForegroundNdefPush(this);
+        if(mNfcAdapter != null){
+        	mNfcAdapter.disableForegroundNdefPush(this);
+        }
+        
     }
     
     @Override  
@@ -172,15 +175,22 @@ public class StickyNotesActivity extends Activity implements SensorEventListener
       *所以，经过实际测试，只需监听任一轴的加速度大于14的时候，改变你需要的设置 
       *就OK了~~~ 
       */  
-       if((Math.abs(values[0])>14 || Math.abs(values[1])>14 || Math.abs(values[2])>14)){  
       
-        //摇动手机后，设置button上显示的字为空  
-        //clear.setText(null);  
-      
-        //摇动手机后，再伴随震动提示~~  
-        vibrator.vibrate(500);  
-      
-       }  
+			if ((Math.abs(values[0]) > 14 || Math.abs(values[1]) > 14 || Math
+					.abs(values[2]) > 14)) {
+				Log.d("sensor0", "sensor0 : " + Math.abs(values[0]) + "");
+				Log.d("sensor1", "sensor1 : " + Math.abs(values[1]) + "");
+				Log.d("sensor2", "sensor2 : " + Math.abs(values[2]) + "");
+				// 摇动手机后，设置button上显示的字为空
+				// clear.setText(null);
+				Intent intent = new Intent(StickyNotesActivity.this,
+						TransportActivity.class);
+				startActivity(intent);
+
+				// 摇动手机后，再伴随震动提示~~
+				vibrator.vibrate(500);
+
+			}
       }  
     }  
 

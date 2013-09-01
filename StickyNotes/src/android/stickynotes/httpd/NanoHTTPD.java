@@ -138,6 +138,7 @@ public abstract class NanoHTTPD {
                             });
                         }
                     } catch (IOException e) {
+                    	e.printStackTrace();
                     }
                 } while (!myServerSocket.isClosed());
             }
